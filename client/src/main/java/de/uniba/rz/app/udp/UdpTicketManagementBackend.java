@@ -6,12 +6,16 @@ import de.uniba.rz.entities.Ticket;
 import de.uniba.rz.entities.TicketException;
 import de.uniba.rz.entities.Type;
 
+import java.net.DatagramSocket;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class UdpTicketManagementBackend implements TicketManagementBackend {
 
-    String host;
-    int port;
+    private String host;
+    private int port;
+
+    AtomicInteger nextId;
 
     public UdpTicketManagementBackend(String host, int port){
         this.host = host;
@@ -23,8 +27,16 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
     }
 
     @Override
-    public Ticket createNewTicket(String reporter, String topic, String description, Type type, Priority priority) throws TicketException {
-        return null;
+    public Ticket createNewTicket(String reporter, String topic, String description, Type type, Priority priority)
+            throws TicketException {
+        Ticket newTicket = new Ticket(nextId.getAndIncrement(), reporter, topic, description, type, priority);
+        sendTicketToServer(newTicket);
+        return newTicket;
+    }
+
+    private void sendTicketToServer(Ticket newTicket) {
+        DatagramSocket datagramSocket = UdpConnection.
+                getUdpConnection(host,port).getDatagramSocket();
     }
 
     @Override
