@@ -14,6 +14,7 @@ public class UdpDatagramPacket {
         os.writeObject(ticket);
         os.flush();
         byte[] data = byteArrayStream.getOut().toByteArray();
+        System.out.println("datagram packet len: "+data.length);
         return new DatagramPacket(data, data.length);
     }
 }

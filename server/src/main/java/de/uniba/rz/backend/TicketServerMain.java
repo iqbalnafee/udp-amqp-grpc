@@ -1,5 +1,7 @@
 package de.uniba.rz.backend;
 
+import de.uniba.rz.backend.udp.UdpRemoteAccess;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,7 +41,7 @@ public class TicketServerMain {
 		
 		// TODO Add your implementations of the RemoteAccess interface
 		// e.g.:
-		// implementations.add(new UdpRemoteAccess(args[0], args[1]));
+		implementations.add(new UdpRemoteAccess(args[0], args[1]));
 
 		return implementations;
 	}
