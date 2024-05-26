@@ -2,7 +2,6 @@ package de.uniba.rz.entities.network;
 
 import de.uniba.rz.entities.Ticket;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
