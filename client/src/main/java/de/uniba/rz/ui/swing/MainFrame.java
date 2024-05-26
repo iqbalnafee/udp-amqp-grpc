@@ -482,7 +482,7 @@ public class MainFrame extends JFrame implements Observer {
 
 		@Override
 		public int getRowCount() {
-			return ticketsToShow.size();
+			return ticketsToShow != null ? ticketsToShow.size():0;
 		}
 
 		@Override
