@@ -1,15 +1,14 @@
-package de.uniba.rz.app.udp;
+package de.uniba.rz.entities.network;
 
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.SocketException;
 
-public class UdpConnection {
-    private static UdpConnection udpConnection;
+public class ConnectionUtil {
+    private static ConnectionUtil udpConnection;
     private DatagramSocket datagramSocket;
 
-    private UdpConnection(String host, int port) {
+    private ConnectionUtil(String host, int port) {
         try {
             datagramSocket = new DatagramSocket();
             datagramSocket.connect(new InetSocketAddress(host,port));
@@ -18,8 +17,8 @@ public class UdpConnection {
         }
     }
 
-    public static synchronized UdpConnection getUdpConnection(String host, int port){
-        if (udpConnection == null) udpConnection = new UdpConnection(host, port);
+    public static synchronized ConnectionUtil getUdpConnection(String host, int port){
+        if (udpConnection == null) udpConnection = new ConnectionUtil(host, port);
         return udpConnection;
     }
 
