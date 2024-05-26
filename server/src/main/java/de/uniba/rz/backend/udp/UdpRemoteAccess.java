@@ -15,7 +15,7 @@ public class UdpRemoteAccess implements RemoteAccess {
     int port;
 
     int bufferLen = 65536;
-    byte[] buf = new byte[65530];
+    byte[] buf = new byte[bufferLen];
     public UdpRemoteAccess(String host, String port) {
         this.host = host;
         this.port = Integer.parseInt(port);
