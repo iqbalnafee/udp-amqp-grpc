@@ -4,8 +4,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
 public class RabbitMqSend {
-    private final static String QUEUE_NAME = "ticketQueue";
-    private final static String RABBITMQ_HOST = "localhost";
+    private static final String QUEUE_NAME = "ticketQueue";
+    private static final String RABBITMQ_HOST = "localhost";
 
     public static void sendPacketToQueue(byte[] data) throws Exception {
         try (Connection connection = ConnectionUtil.
