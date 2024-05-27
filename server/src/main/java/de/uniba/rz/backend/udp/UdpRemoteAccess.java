@@ -18,12 +18,16 @@ public class UdpRemoteAccess implements RemoteAccess {
     String host;
     int port;
 
+    DatagramSocket datagramSocket;
+
     int bufferLen = 65536;
-    byte[] buf = new byte[bufferLen];
+    byte[] buffer = new byte[bufferLen];
 
     public UdpRemoteAccess(String host, String port) {
         this.host = host;
         this.port = Integer.parseInt(port);
+        datagramSocket = ConnectionUtil.
+                getDatagramSocketForServer(this.port).getDatagramSocket();
     }
 
     @Override
@@ -31,12 +35,10 @@ public class UdpRemoteAccess implements RemoteAccess {
         while (true) {
             try {
 
-                DatagramSocket datagramSocket = ConnectionUtil.
-                        getDatagramSocketForServer(port).getDatagramSocket();
-                DatagramPacket receivedPacket = new DatagramPacket(buf, buf.length);
+                DatagramPacket receivedPacket = new DatagramPacket(buffer, buffer.length);
                 datagramSocket.receive(receivedPacket);
 
-                ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buf));
+                ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
                 Ticket ticket = (Ticket) ois.readObject();
 
                 ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
@@ -46,7 +48,6 @@ public class UdpRemoteAccess implements RemoteAccess {
                 ObjectOutputStream outputStream = new ObjectOutputStream(out);
                 outputStream.writeObject(ticketStore.getAllTickets());
                 outputStream.flush();
-                //byte[] allTickets = ByteArrayStream.getByteDataFromObject(ticketStore.getAllTickets());
                 datagramSocket.send(new DatagramPacket(out.toByteArray(), out.toByteArray().length,
                         receivedPacket.getAddress(), receivedPacket.getPort()));
 

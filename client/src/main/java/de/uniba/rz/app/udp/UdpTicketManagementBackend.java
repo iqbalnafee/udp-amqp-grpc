@@ -10,9 +10,7 @@ import de.uniba.rz.entities.network.ConnectionUtil;
 import de.uniba.rz.entities.network.UdpDatagramPacket;
 import de.uniba.rz.entities.rabbitmq.RabbitMqSend;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.ArrayList;
@@ -28,6 +26,8 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
 
     List<Ticket> tickets;
 
+    DatagramSocket datagramSocket;
+
     public UdpTicketManagementBackend() {
         nextId = new AtomicInteger(1);
     }
@@ -37,6 +37,8 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         this.port = port;
         this.nextId = new AtomicInteger(1);
         this.tickets = new ArrayList<>();
+        datagramSocket = ConnectionUtil.
+                getUdpConnection(host, port).getDatagramSocket();
     }
 
     @Override
@@ -53,7 +55,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             receiveTicketsFromServer();
             //sendTicketToQueue(newTicket);
         } catch (Exception exception) {
-            throw new TicketException("Some error occured");
+            throw new TicketException("Some error occurred. Maybe server not started");
         }
         return (Ticket) newTicket.clone();
     }
@@ -62,8 +64,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         byte[] buffer = new byte[65536];
         try {
             DatagramPacket receivedPacket = UdpDatagramPacket.getNewUdpDatagramPacket(buffer);
-            ConnectionUtil.
-                    getUdpConnection(host, port).getDatagramSocket().receive(receivedPacket);
+            datagramSocket.receive(receivedPacket);
 
             ByteArrayInputStream byteStreamIn = new ByteArrayInputStream(receivedPacket.getData(),
                     0, receivedPacket.getLength());
@@ -82,8 +83,6 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
     }
 
     private void sendTicketToServer(Ticket ticket) throws IOException {
-        DatagramSocket datagramSocket = ConnectionUtil.
-                getUdpConnection(host, port).getDatagramSocket();
         byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
         datagramSocket.send(UdpDatagramPacket.getNewUdpDatagramPacket(data));
     }

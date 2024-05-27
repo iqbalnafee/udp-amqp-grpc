@@ -36,11 +36,11 @@ public class ByteArrayStream {
         return os;
     }
 
-    public static byte[] getByteDataFromObject(Object object) throws IOException {
-        ByteArrayStream byteArrayStream = ByteArrayStream.getInstance();
-        ObjectOutputStream os = byteArrayStream.getOs();
-        os.writeObject(object);
-        os.flush();
-        return byteArrayStream.getOut().toByteArray();
+    public static byte[] getByteDataFromObject(Ticket ticket) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        objectOutputStream.writeObject(ticket);
+        objectOutputStream.flush();
+        return byteArrayOutputStream.toByteArray();
     }
 }
