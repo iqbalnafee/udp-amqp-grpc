@@ -29,7 +29,7 @@ public class TicketServerMain {
 			shutdownReader.readLine();
 			System.out.println("Shutting down...");
 	
-			// Shuttung down all remote access implementations
+			// Shutting down all remote access implementations
 			for (RemoteAccess implementation : remoteAccessImplementations) {
 				implementation.shutdown();
 			}

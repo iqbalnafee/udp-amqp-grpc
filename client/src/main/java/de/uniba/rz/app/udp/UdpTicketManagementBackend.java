@@ -89,6 +89,11 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
 
     @Override
     public List<Ticket> getAllTickets() throws TicketException {
+        try{
+            sendTicketToServer(new Ticket());
+            receiveTicketsFromServer();
+        }
+        catch(Exception exception){}
         return tickets;
     }
 

@@ -40,9 +40,11 @@ public class UdpRemoteAccess implements RemoteAccess {
 
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
                 Ticket ticket = (Ticket) ois.readObject();
+                if(ticket.getId()>0){
+                    ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
+                            ticket.getDescription(), ticket.getType(), ticket.getPriority());
+                }
 
-                ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
-                        ticket.getDescription(), ticket.getType(), ticket.getPriority());
 
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 ObjectOutputStream outputStream = new ObjectOutputStream(out);
