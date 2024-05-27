@@ -5,8 +5,10 @@ import de.uniba.rz.entities.Priority;
 import de.uniba.rz.entities.Ticket;
 import de.uniba.rz.entities.TicketException;
 import de.uniba.rz.entities.Type;
+import de.uniba.rz.entities.network.ByteArrayStream;
 import de.uniba.rz.entities.network.ConnectionUtil;
 import de.uniba.rz.entities.network.UdpDatagramPacket;
+import de.uniba.rz.entities.rabbitmq.RabbitMqSend;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -40,17 +42,24 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             throws TicketException {
         Ticket newTicket = new Ticket(nextId.getAndIncrement(), reporter, topic, description, type, priority);
         try {
-            sendTicketToServer(newTicket);
+            //sendTicketToServer(newTicket);
+            sendTicketToQueue(newTicket);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
         return newTicket;
     }
 
-    private void sendTicketToServer(Ticket newTicket) throws IOException {
+    private void sendTicketToQueue(Ticket ticket) throws Exception {
+        byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
+        RabbitMqSend.sendPacketToQueue(data);
+    }
+
+    private void sendTicketToServer(Ticket ticket) throws IOException {
         DatagramSocket datagramSocket = ConnectionUtil.
                 getUdpConnection(host, port).getDatagramSocket();
-        datagramSocket.send(UdpDatagramPacket.getNewUdpDatagramPacket(newTicket));
+        byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
+        datagramSocket.send(UdpDatagramPacket.getNewUdpDatagramPacket(data));
     }
 
     @Override

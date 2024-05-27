@@ -38,9 +38,7 @@ public class TicketServerMain {
 
 	private static List<RemoteAccess> getAvailableRemoteAccessImplementations(String[] args) {
 		List<RemoteAccess> implementations = new ArrayList<>();
-		
-		// TODO Add your implementations of the RemoteAccess interface
-		// e.g.:
+
 		implementations.add(new UdpRemoteAccess(args[0], args[1]));
 
 		return implementations;

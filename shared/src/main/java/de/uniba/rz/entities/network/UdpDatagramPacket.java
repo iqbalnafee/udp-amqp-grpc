@@ -8,12 +8,7 @@ import java.net.DatagramPacket;
 
 public class UdpDatagramPacket {
 
-    public static DatagramPacket getNewUdpDatagramPacket(Ticket ticket) throws IOException {
-        ByteArrayStream byteArrayStream = ByteArrayStream.getInstance();
-        ObjectOutputStream os = byteArrayStream.getOs();
-        os.writeObject(ticket);
-        os.flush();
-        byte[] data = byteArrayStream.getOut().toByteArray();
+    public static DatagramPacket getNewUdpDatagramPacket(byte[] data) {
         System.out.println("datagram packet len: "+data.length);
         return new DatagramPacket(data, data.length);
     }
