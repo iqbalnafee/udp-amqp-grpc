@@ -10,8 +10,12 @@ import de.uniba.rz.entities.network.ConnectionUtil;
 import de.uniba.rz.entities.network.UdpDatagramPacket;
 import de.uniba.rz.entities.rabbitmq.RabbitMqSend;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,6 +26,8 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
 
     AtomicInteger nextId;
 
+    List<Ticket> tickets;
+
     public UdpTicketManagementBackend() {
         nextId = new AtomicInteger(1);
     }
@@ -30,6 +36,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         this.host = host;
         this.port = port;
         this.nextId = new AtomicInteger(1);
+        this.tickets = new ArrayList<>();
     }
 
     @Override
@@ -42,12 +49,31 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             throws TicketException {
         Ticket newTicket = new Ticket(nextId.getAndIncrement(), reporter, topic, description, type, priority);
         try {
-            //sendTicketToServer(newTicket);
-            sendTicketToQueue(newTicket);
+            sendTicketToServer(newTicket);
+            receiveTicketsFromServer();
+            //sendTicketToQueue(newTicket);
         } catch (Exception exception) {
-            exception.printStackTrace();
+            throw new TicketException("Some error occured");
         }
-        return newTicket;
+        return (Ticket) newTicket.clone();
+    }
+
+    private void receiveTicketsFromServer() throws TicketException {
+        byte[] buffer = new byte[65536];
+        try {
+            DatagramPacket receivedPacket = UdpDatagramPacket.getNewUdpDatagramPacket(buffer);
+            ConnectionUtil.
+                    getUdpConnection(host, port).getDatagramSocket().receive(receivedPacket);
+
+            ByteArrayInputStream byteStreamIn = new ByteArrayInputStream(receivedPacket.getData(),
+                    0, receivedPacket.getLength());
+            ObjectInputStream objStreamIn = new ObjectInputStream(byteStreamIn);
+            tickets = new ArrayList<>();
+            tickets.addAll((ArrayList<Ticket>) objStreamIn.readObject());
+        }
+        catch (Exception exception){
+            throw new TicketException("Can not receive response from server");
+        }
     }
 
     private void sendTicketToQueue(Ticket ticket) throws Exception {
@@ -64,12 +90,12 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
 
     @Override
     public List<Ticket> getAllTickets() throws TicketException {
-        return null;
+        return tickets;
     }
 
     @Override
     public Ticket getTicketById(int id) throws TicketException {
-        return null;
+        return tickets.stream().filter(ticket -> ticket.getId() == id).findFirst().get();
     }
 
     @Override

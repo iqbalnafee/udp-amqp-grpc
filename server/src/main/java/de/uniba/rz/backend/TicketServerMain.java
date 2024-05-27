@@ -19,8 +19,9 @@ public class TicketServerMain {
 
 		// Starting remote access implementations:
 		for (RemoteAccess implementation : remoteAccessImplementations) {
-			implementation.prepareStartup(simpleTestStore);
-			new Thread(implementation).start();
+			new Thread(() -> {
+				implementation.prepareStartup(simpleTestStore);
+			}).start();
 		}
 
 		try (BufferedReader shutdownReader = new BufferedReader(new InputStreamReader(System.in))) {

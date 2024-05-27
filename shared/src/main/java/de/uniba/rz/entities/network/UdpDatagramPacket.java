@@ -9,7 +9,6 @@ import java.net.DatagramPacket;
 public class UdpDatagramPacket {
 
     public static DatagramPacket getNewUdpDatagramPacket(byte[] data) {
-        System.out.println("datagram packet len: "+data.length);
         return new DatagramPacket(data, data.length);
     }
 }
