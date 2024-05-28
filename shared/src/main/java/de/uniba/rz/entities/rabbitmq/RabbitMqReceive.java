@@ -2,6 +2,7 @@ package de.uniba.rz.entities.rabbitmq;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 import de.uniba.rz.entities.Ticket;
 import de.uniba.rz.entities.network.ByteArrayStream;
@@ -13,9 +14,9 @@ import java.net.DatagramSocket;
 public class RabbitMqReceive {
 
     public static void main(String[] argv) throws Exception {
-        Connection connection = ConnectionUtil.
-                getRabbitMqConnection(RabbitMqEntities.RABBITMQ_HOST).getNewConnection();
-        Channel channel = connection.createChannel();
+        ConnectionFactory connectionFactory = ConnectionUtil.
+                getRabbitMqConnection(RabbitMqEntities.RABBITMQ_HOST).getConnectionFactory();
+        Channel channel = connectionFactory.newConnection().createChannel();
 
         channel.queueDeclare(RabbitMqEntities.QUEUE_NAME, true, false, false, null);
         System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
