@@ -24,6 +24,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
     List<Ticket> tickets;
 
     DatagramSocket datagramSocket;
+    RabbitMqSend rabbitMqSend;
 
     public UdpTicketManagementBackend() {
         nextId = new AtomicInteger(1);
@@ -37,6 +38,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         this.tickets = new ArrayList<>();
         datagramSocket = ConnectionUtil.
                 getUdpConnection(host, port).getDatagramSocket();
+        rabbitMqSend = new RabbitMqSend();
     }
 
     @Override
@@ -47,7 +49,9 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
     @Override
     public Ticket createNewTicket(String reporter, String topic, String description, Type type, Priority priority)
             throws TicketException {
-        Ticket newTicket = new Ticket(nextId.getAndIncrement(), reporter, topic, description, type, priority);
+
+        nextId.getAndIncrement();
+        Ticket newTicket = new Ticket(tickets.size()+1, reporter, topic, description, type, priority);
         try {
             if (!isRabbitMqActive) {
                 sendTicketToServer(newTicket);
@@ -60,6 +64,16 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
     }
     private void receiveTicketsFromServer() throws TicketException {
         byte[] buffer = new byte[65536];
+        try {
+            DatagramPacket receivedPacket = UdpDatagramPacket.getNewUdpDatagramPacket(buffer);
+            datagramSocket.receive(receivedPacket);
+            addDataInListFromServer(receivedPacket.getData());
+
+        } catch (Exception exception) {
+            throw new TicketException("Can not receive response from server");
+        }
+
+        /*byte[] buffer = new byte[65536];
         try {
             List<byte[]> packetList = new ArrayList<>();
             DatagramPacket receivedPacket = UdpDatagramPacket.getNewUdpDatagramPacket(buffer);
@@ -93,8 +107,21 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             // Deserialize the combined data
             ByteArrayInputStream combinedByteStreamIn = new ByteArrayInputStream(byteStreamOut.toByteArray());
             ObjectInputStream combinedObjStreamIn = new ObjectInputStream(combinedByteStreamIn);
+            datagramSocket.receive(receivedPacket);
+            addDataInListFromServer(receivedPacket.getData());
+
+        } catch (Exception exception) {
+            throw new TicketException("Can not receive response from server");
+        }*/
+    }
+
+    public void addDataInListFromServer(byte[] data) throws TicketException {
+        try {
+            ByteArrayInputStream byteStreamIn = new ByteArrayInputStream(data,
+                    0, data.length);
+            ObjectInputStream objStreamIn = new ObjectInputStream(byteStreamIn);
             tickets = new ArrayList<>();
-            tickets.addAll((ArrayList<Ticket>) combinedObjStreamIn.readObject());
+            tickets.addAll((ArrayList<Ticket>) objStreamIn.readObject());
             System.out.println("Ticket list size"+tickets.size());
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -102,21 +129,26 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         }
     }
 
-    private void sendTicketToQueue(Ticket ticket) throws Exception {
-        byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
-        RabbitMqSend.sendPacketToQueue(data);
-    }
+
 
     private void sendTicketToServer(Ticket ticket) throws IOException {
         byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
         datagramSocket.send(UdpDatagramPacket.getNewUdpDatagramPacket(data));
     }
-
+    private void sendTicketToQueue(Ticket ticket) throws Exception {
+        byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
+        data = rabbitMqSend.sendPacketToQueue(data);
+        addDataInListFromServer(data);
+    }
     @Override
     public List<Ticket> getAllTickets() throws TicketException {
         try {
-            sendTicketToServer(new Ticket());
-            receiveTicketsFromServer();
+            if (!isRabbitMqActive) {
+                sendTicketToServer(new Ticket());
+                receiveTicketsFromServer();
+            } else {
+                sendTicketToQueue(new Ticket());
+            }
         } catch (Exception exception) {
         }
         return tickets;
@@ -132,7 +164,6 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         Ticket ticketToModify = changeTicketStatus(id, Status.ACCEPTED);
         return (Ticket) ticketToModify.clone();
     }
-
 
 
     @Override
@@ -153,7 +184,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         if ((status != Status.CLOSED && ticketToModify.getStatus() != Status.NEW) ||
                 (status == Status.CLOSED && ticketToModify.getStatus() != Status.ACCEPTED)) {
             throw new TicketException(
-                    "Can not "+status+" Ticket as it is currently in status " + ticketToModify.getStatus());
+                    "Can not " + status + " Ticket as it is currently in status " + ticketToModify.getStatus());
         }
         ticketToModify.setStatus(status);
         try {

@@ -6,4 +6,5 @@ public class RabbitMqEntities {
     public static final String RABBITMQ_HOST = "localhost";
     public static final String SERVER_ADDRESS = "localhost";
     public static final Integer SERVER_PORT = 1337;
+    public static final Integer RABBITMQ_RESPONSE_BYTE_LEN = 65536;
 }

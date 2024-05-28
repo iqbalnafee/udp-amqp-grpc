@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.List;
 import java.util.Optional;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class UdpRemoteAccess implements RemoteAccess {
                 if (ticket.getId() > 0) {
                     Optional<Ticket> optionalTicket = ticketStore.getAllTickets().
                             stream().filter(t -> t.getId() == ticket.getId()).findFirst();
-                    if(optionalTicket.isPresent()) ticketStore.updateTicketStatus(ticket.getId(), ticket.getStatus());
+                    if (optionalTicket.isPresent()) ticketStore.updateTicketStatus(ticket.getId(), ticket.getStatus());
                     else ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
                             ticket.getDescription(), ticket.getType(), ticket.getPriority());
                 }
