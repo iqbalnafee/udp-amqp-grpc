@@ -117,7 +117,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             sendTicketToServer(new Ticket());
             receiveTicketsFromServer();
         }
-        catch(Exception exception){}
+        catch(Exception ignored){}
         return tickets;
     }
 

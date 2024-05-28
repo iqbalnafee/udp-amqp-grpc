@@ -18,9 +18,8 @@ public class UdpRemoteAccess implements RemoteAccess {
 
     DatagramSocket datagramSocket;
 
-    private int bufferLen = 65536;
+    private final int bufferLen = 65536;
     byte[] buffer = new byte[bufferLen];
-    private TicketStore ticketStore;
 
     public UdpRemoteAccess(String host, String port) {
         this.host = host;
