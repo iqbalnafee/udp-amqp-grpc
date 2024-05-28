@@ -105,4 +105,6 @@ public interface TicketManagementBackend extends Shutdown, TicketSearchBackend {
 	 */
 	Ticket closeTicket(int id) throws TicketException;
 
+	Ticket changeTicketStatus(int id, Status status) throws TicketException;
+
 }

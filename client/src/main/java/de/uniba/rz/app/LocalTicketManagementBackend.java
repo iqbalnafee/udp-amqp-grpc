@@ -98,4 +98,9 @@ public class LocalTicketManagementBackend implements TicketManagementBackend {
 		return (Ticket) ticketToModify.clone();
 	}
 
+	@Override
+	public Ticket changeTicketStatus(int id, Status status) throws TicketException {
+		return null;
+	}
+
 }

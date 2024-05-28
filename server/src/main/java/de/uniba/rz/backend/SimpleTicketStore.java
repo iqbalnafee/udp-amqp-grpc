@@ -26,7 +26,7 @@ public class SimpleTicketStore implements TicketStore {
 	@Override
 	public Ticket storeNewTicket(String reporter, String topic, String description, Type type, Priority priority) {
 		System.out.println("Creating new Ticket from Reporter: " + reporter + " with the topic \"" + topic + "\"");
-		Ticket newTicket = new Ticket(nextTicketId++, reporter, topic, description, type, priority);
+		Ticket newTicket = new Ticket(++nextTicketId, reporter, topic, description, type, priority);
 		ticketList.add(newTicket);
 		return newTicket;
 	}

@@ -3,8 +3,6 @@ package de.uniba.rz.backend.udp;
 import de.uniba.rz.backend.RemoteAccess;
 import de.uniba.rz.backend.TicketStore;
 import de.uniba.rz.entities.Ticket;
-import de.uniba.rz.entities.TicketException;
-import de.uniba.rz.entities.network.ByteArrayStream;
 import de.uniba.rz.entities.network.ConnectionUtil;
 
 import java.io.ByteArrayInputStream;
@@ -13,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.Optional;
 
 public class UdpRemoteAccess implements RemoteAccess {
     String host;
@@ -41,10 +40,12 @@ public class UdpRemoteAccess implements RemoteAccess {
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
                 Ticket ticket = (Ticket) ois.readObject();
                 if(ticket.getId()>0){
-                    ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
+                    Optional<Ticket> optionalTicket = ticketStore.getAllTickets().
+                            stream().filter(t -> t.getId() == ticket.getId()).findFirst();
+                    if(optionalTicket.isPresent()) ticketStore.updateTicketStatus(ticket.getId(), ticket.getStatus());
+                    else ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
                             ticket.getDescription(), ticket.getType(), ticket.getPriority());
                 }
-
 
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 ObjectOutputStream outputStream = new ObjectOutputStream(out);

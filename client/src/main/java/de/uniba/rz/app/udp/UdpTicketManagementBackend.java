@@ -1,10 +1,7 @@
 package de.uniba.rz.app.udp;
 
 import de.uniba.rz.app.TicketManagementBackend;
-import de.uniba.rz.entities.Priority;
-import de.uniba.rz.entities.Ticket;
-import de.uniba.rz.entities.TicketException;
-import de.uniba.rz.entities.Type;
+import de.uniba.rz.entities.*;
 import de.uniba.rz.entities.network.ByteArrayStream;
 import de.uniba.rz.entities.network.ConnectionUtil;
 import de.uniba.rz.entities.network.UdpDatagramPacket;
@@ -53,13 +50,12 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             throws TicketException {
         Ticket newTicket = new Ticket(nextId.getAndIncrement(), reporter, topic, description, type, priority);
         try {
-            if(!isRabbitMqActive){
+            if (!isRabbitMqActive) {
                 sendTicketToServer(newTicket);
                 receiveTicketsFromServer();
-            }
-            else sendTicketToQueue(newTicket);
+            } else sendTicketToQueue(newTicket);
         } catch (Exception exception) {
-            throw new TicketException("Some error occurred. Reason: "+ exception.getMessage());
+            throw new TicketException("Some error occurred. Reason: " + exception.getMessage());
         }
         return (Ticket) newTicket.clone();
     }
@@ -75,8 +71,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             ObjectInputStream objStreamIn = new ObjectInputStream(byteStreamIn);
             tickets = new ArrayList<>();
             tickets.addAll((ArrayList<Ticket>) objStreamIn.readObject());
-        }
-        catch (Exception exception){
+        } catch (Exception exception) {
             throw new TicketException("Can not receive response from server");
         }
     }
@@ -93,31 +88,54 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
 
     @Override
     public List<Ticket> getAllTickets() throws TicketException {
-        try{
+        try {
             sendTicketToServer(new Ticket());
             receiveTicketsFromServer();
+        } catch (Exception exception) {
         }
-        catch(Exception exception){}
         return tickets;
     }
 
     @Override
-    public Ticket getTicketById(int id) throws TicketException {
-        return tickets.stream().filter(ticket -> ticket.getId() == id).findFirst().get();
+    public Ticket getTicketById(int id) {
+        return tickets.stream().filter(t -> t.getId() == id).findFirst().get();
     }
 
     @Override
     public Ticket acceptTicket(int id) throws TicketException {
-        return null;
+        Ticket ticketToModify = changeTicketStatus(id, Status.ACCEPTED);
+        return (Ticket) ticketToModify.clone();
     }
+
+
 
     @Override
     public Ticket rejectTicket(int id) throws TicketException {
-        return null;
+        Ticket ticketToModify = changeTicketStatus(id, Status.REJECTED);
+        return (Ticket) ticketToModify.clone();
     }
 
     @Override
     public Ticket closeTicket(int id) throws TicketException {
-        return null;
+        Ticket ticketToModify = changeTicketStatus(id, Status.CLOSED);
+        return (Ticket) ticketToModify.clone();
+    }
+
+    @Override
+    public Ticket changeTicketStatus(int id, Status status) throws TicketException {
+        Ticket ticketToModify = getTicketById(id);
+        if ((status != Status.CLOSED && ticketToModify.getStatus() != Status.NEW) ||
+                (status == Status.CLOSED && ticketToModify.getStatus() != Status.ACCEPTED)) {
+            throw new TicketException(
+                    "Can not "+status+" Ticket as it is currently in status " + ticketToModify.getStatus());
+        }
+        ticketToModify.setStatus(status);
+        try {
+            sendTicketToServer(ticketToModify);
+            receiveTicketsFromServer();
+        } catch (Exception e) {
+            throw new TicketException("can not send modified ticket to server");
+        }
+        return (Ticket) ticketToModify.clone();
     }
 }
