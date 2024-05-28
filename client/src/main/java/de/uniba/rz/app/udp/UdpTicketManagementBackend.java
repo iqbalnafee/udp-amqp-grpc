@@ -9,7 +9,6 @@ import de.uniba.rz.entities.network.ByteArrayStream;
 import de.uniba.rz.entities.network.ConnectionUtil;
 import de.uniba.rz.entities.network.UdpDatagramPacket;
 import de.uniba.rz.entities.rabbitmq.RabbitMqSend;
-
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -63,20 +62,46 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         }
         return (Ticket) newTicket.clone();
     }
-
     private void receiveTicketsFromServer() throws TicketException {
         byte[] buffer = new byte[65536];
         try {
+            List<byte[]> packetList = new ArrayList<>();
             DatagramPacket receivedPacket = UdpDatagramPacket.getNewUdpDatagramPacket(buffer);
-            datagramSocket.receive(receivedPacket);
-
-            ByteArrayInputStream byteStreamIn = new ByteArrayInputStream(receivedPacket.getData(),
-                    0, receivedPacket.getLength());
-            ObjectInputStream objStreamIn = new ObjectInputStream(byteStreamIn);
+            while (true) {
+                datagramSocket.receive(receivedPacket);
+                // Check if the packet indicates end of transmission
+                ByteArrayInputStream byteStreamIn = new ByteArrayInputStream(receivedPacket.getData(),
+                        0, receivedPacket.getLength());
+                ObjectInputStream objStreamIn = new ObjectInputStream(byteStreamIn);
+                String signal;
+                try {
+                    signal = (String) objStreamIn.readObject();
+                } catch (Exception e) {
+                    signal = null;  // Not an end signal
+                }
+                if ("END".equals(signal)) {
+                    break;
+                } else {
+                    packetList.add(receivedPacket.getData().clone());
+                    if (receivedPacket.getLength() < 65536) {
+                        break;  // Last packet received
+                    }
+                }
+            }
+            // Combine all received packets into a single byte array
+            ByteArrayOutputStream byteStreamOut = new ByteArrayOutputStream();
+            for (byte[] packet : packetList) {
+                byteStreamOut.write(packet);
+                System.out.println("packet length"+packet.length);
+            }
+            // Deserialize the combined data
+            ByteArrayInputStream combinedByteStreamIn = new ByteArrayInputStream(byteStreamOut.toByteArray());
+            ObjectInputStream combinedObjStreamIn = new ObjectInputStream(combinedByteStreamIn);
             tickets = new ArrayList<>();
-            tickets.addAll((ArrayList<Ticket>) objStreamIn.readObject());
-        }
-        catch (Exception exception){
+            tickets.addAll((ArrayList<Ticket>) combinedObjStreamIn.readObject());
+            System.out.println("Ticket list size"+tickets.size());
+        } catch (Exception exception) {
+            exception.printStackTrace();
             throw new TicketException("Can not receive response from server");
         }
     }
@@ -97,7 +122,7 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             sendTicketToServer(new Ticket());
             receiveTicketsFromServer();
         }
-        catch(Exception exception){}
+        catch(Exception ignored){}
         return tickets;
     }
 
