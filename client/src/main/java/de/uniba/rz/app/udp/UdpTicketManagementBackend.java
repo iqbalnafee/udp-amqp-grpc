@@ -20,6 +20,8 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
 
     private String host;
     private int port;
+    boolean isRabbitMqActive;
+
     AtomicInteger nextId;
 
     List<Ticket> tickets;
@@ -30,9 +32,10 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         nextId = new AtomicInteger(1);
     }
 
-    public UdpTicketManagementBackend(String host, int port) {
+    public UdpTicketManagementBackend(String host, int port, boolean isRabbitMqActive) {
         this.host = host;
         this.port = port;
+        this.isRabbitMqActive = isRabbitMqActive;
         this.nextId = new AtomicInteger(1);
         this.tickets = new ArrayList<>();
         datagramSocket = ConnectionUtil.
@@ -49,11 +52,13 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
             throws TicketException {
         Ticket newTicket = new Ticket(nextId.getAndIncrement(), reporter, topic, description, type, priority);
         try {
-            sendTicketToServer(newTicket);
-            receiveTicketsFromServer();
-            //sendTicketToQueue(newTicket);
+            if(!isRabbitMqActive){
+                sendTicketToServer(newTicket);
+                receiveTicketsFromServer();
+            }
+            else sendTicketToQueue(newTicket);
         } catch (Exception exception) {
-            throw new TicketException("Some error occurred. Maybe server not started");
+            throw new TicketException("Some error occurred. Reason: "+ exception.getMessage());
         }
         return (Ticket) newTicket.clone();
     }

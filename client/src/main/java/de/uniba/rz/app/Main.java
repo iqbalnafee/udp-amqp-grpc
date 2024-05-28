@@ -67,7 +67,9 @@ public class Main {
                 case "udp":
                     String host = args[1];
                     int port = Integer.parseInt(args[2]);
-                    return new UdpTicketManagementBackend(host, port);
+                    boolean isRabbitMqActive = false;
+                    if (args.length > 3) isRabbitMqActive = Boolean.parseBoolean(args[3]);
+                    return new UdpTicketManagementBackend(host, port, isRabbitMqActive);
 
                 // Default case for unknown implementations
                 default:
