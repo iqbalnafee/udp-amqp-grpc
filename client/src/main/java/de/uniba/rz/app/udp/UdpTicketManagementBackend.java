@@ -86,23 +86,25 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
         }
     }
 
-    private void sendTicketToQueue(Ticket ticket) throws Exception {
-        byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
-        data = rabbitMqSend.sendPacketToQueue(data);
-        addDataInListFromServer(data);
-    }
+
 
     private void sendTicketToServer(Ticket ticket) throws IOException {
         byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
         datagramSocket.send(UdpDatagramPacket.getNewUdpDatagramPacket(data));
     }
-
+    private void sendTicketToQueue(Ticket ticket) throws Exception {
+        byte[] data = ByteArrayStream.getByteDataFromObject(ticket);
+        data = rabbitMqSend.sendPacketToQueue(data);
+        addDataInListFromServer(data);
+    }
     @Override
     public List<Ticket> getAllTickets() throws TicketException {
         try {
-            if(!isRabbitMqActive){
+            if (!isRabbitMqActive) {
                 sendTicketToServer(new Ticket());
                 receiveTicketsFromServer();
+            } else {
+                //sendTicketToQueue(new Ticket());
             }
         } catch (Exception exception) {
         }
