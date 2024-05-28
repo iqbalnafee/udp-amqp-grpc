@@ -27,6 +27,7 @@ public class RabbitMqReceive {
         };
         channel.basicConsume(RabbitMqEntities.QUEUE_NAME, true, deliverCallback, consumerTag -> {
         });
+        Thread.currentThread().join();
     }
 
     private static void sendTicketToServer(byte[] data) throws IOException {
