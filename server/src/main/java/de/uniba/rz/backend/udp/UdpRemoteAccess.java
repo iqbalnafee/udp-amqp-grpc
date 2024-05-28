@@ -41,10 +41,10 @@ public class UdpRemoteAccess implements RemoteAccess {
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer));
                 Ticket ticket = (Ticket) ois.readObject();
                 if (ticket.getId() > 0) {
-                    /*Optional<Ticket> optionalTicket = ticketStore.getAllTickets().
+                    Optional<Ticket> optionalTicket = ticketStore.getAllTickets().
                             stream().filter(t -> t.getId() == ticket.getId()).findFirst();
                     if (optionalTicket.isPresent()) ticketStore.updateTicketStatus(ticket.getId(), ticket.getStatus());
-                    else */ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
+                    else ticketStore.storeNewTicket(ticket.getReporter(), ticket.getTopic(),
                             ticket.getDescription(), ticket.getType(), ticket.getPriority());
                 }
 

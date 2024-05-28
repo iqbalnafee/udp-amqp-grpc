@@ -50,7 +50,9 @@ public class UdpTicketManagementBackend implements TicketManagementBackend {
     @Override
     public Ticket createNewTicket(String reporter, String topic, String description, Type type, Priority priority)
             throws TicketException {
-        Ticket newTicket = new Ticket(nextId.getAndIncrement(), reporter, topic, description, type, priority);
+
+        nextId.getAndIncrement();
+        Ticket newTicket = new Ticket(tickets.size()+1, reporter, topic, description, type, priority);
         try {
             if (!isRabbitMqActive) {
                 sendTicketToServer(newTicket);
